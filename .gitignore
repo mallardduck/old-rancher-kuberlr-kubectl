@@ -1,0 +1,9 @@
+/.dapper
+/.cache
+/.trash-cache
+/bin
+/dist
+*.swp
+.idea
+versions.txt
+new-versions.txt
