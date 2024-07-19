@@ -1,5 +1,5 @@
 ARG BCI_VERSION=15.6
-FROM --platform=$TARGETPLATFORM mallardduck/rancher-kuberlr:base-v0.4.5 AS kuberlr
+FROM --platform=$TARGETPLATFORM mallardduck/rancher-kuberlr:v0.4.5 AS kuberlr
 FROM --platform=$BUILDPLATFORM registry.suse.com/bci/bci-base:${BCI_VERSION} AS build
 
 ARG TARGETPLATFORM

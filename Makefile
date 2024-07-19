@@ -9,7 +9,7 @@ include hack/make/build.mk
 TARGET_PLATFORMS ?= linux/amd64,linux/arm64,linux/s390x
 
 REPO ?= mallardduck
-IMAGE = $(REPO)/rancher-kuberlr:$(TAG)
+IMAGE = $(REPO)/rancher-kuberlr-kubectl:$(TAG)
 BUILD_ACTION = --load
 
 .DEFAULT_GOAL := ci
@@ -30,14 +30,6 @@ image-push: buildx-machine ## build the container image targeting all platforms 
 		--builder $(MACHINE) $(IMAGE_ARGS) $(IID_FILE_FLAG) $(BUILDX_ARGS) \
 		--build-arg VERSION=$(VERSION) --platform=$(TARGET_PLATFORMS) -t "$(IMAGE)" --push .
 	@echo "Pushed $(IMAGE)"
-
-debug-build: buildx-machine ## build (and load) the container image targeting the current platform.
-	$(IMAGE_BUILDER) build -f Dockerfile \
-		--progress plain --no-cache \
-		--builder $(MACHINE) $(IMAGE_ARGS) \
-		--build-arg KUBERLR_RELEASE=v0.4.5 -t "$(REPO)/rancher-kuberlr:base-$(TAG)" $(BUILD_ACTION) .
-	@echo "Built $(IMAGE)"
-
 
 validate: validate-dirty ## Run validation checks.
 

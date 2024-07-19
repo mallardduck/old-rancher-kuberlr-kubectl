@@ -1,4 +1,4 @@
-name: (kuberlr-kubectl) Image Release
+name: Image Release
 
 on:
   push:
@@ -6,7 +6,7 @@ on:
       - 'v*'
 
 env:
-  IMAGE_REPO: "mallardduck/rancher-kuberlr"
+  IMAGE_REPO: "mallardduck/rancher-kuberlr-kubectl"
 
 # GitHub settings / example values:
 #
