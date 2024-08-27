@@ -18,6 +18,11 @@ This repo produces a Rancher specific version of kuberlr `mallardduck/rancher-ku
 | release/v2.8         | v1.Y.Z        | 2.8.Z   |
 
 ### Notes:
+- The current main branch is for 2.9 since that's the primary dev target.
+  - Upon rehoming to `rancher` we will:
+    - a `release/v2.9` will be created with not changes needed;
+    - `release/v2.8` will be created and PR'd to match kubectl versions;
+    - `main` can then be PR'd to use 2.10 target kubectls.
 - Each minor Rancher release will get a `rancher-kuberlr-kubectl` branch:
   - Each branch will get an image tag major to match it.
   - This gives us full "Y" and "Z" control on versioning the component to target Rancher minors.
