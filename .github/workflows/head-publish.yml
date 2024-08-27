@@ -1,0 +1,97 @@
+name : Branch Head Prerelease Images
+
+on:
+  push:
+    branches:
+      - main
+      - release/v[0-9]+.0
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write # Upload artefacts to release.
+
+jobs:
+  prebuild-env:
+    name: Prebuild needed Env vars
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set Branch Tag and Other Variables
+        id: set-vars
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const ref = process.env.GITHUB_REF;
+            const commitSha = process.env.GITHUB_SHA.substring(0, 7);
+
+            let branchTag;
+            let branchStaticTag;
+            let prev_tag = null;
+
+
+            async function getPreviousTag(tagPrefix) {
+              const { data: tags } = await github.rest.repos.listTags({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                per_page: 100
+              });
+
+              // Filter and sort tags by version or commit
+              const filteredTags = tags
+                .filter(tag => tag.name.startsWith(tagPrefix))
+                .sort((a, b) => new Date(b.commit.committer.date) - new Date(a.commit.committer.date));
+
+              return filteredTags.length > 0 ? filteredTags[0].name : null;
+            }
+
+            if (ref == 'refs/heads/main') {
+              branchTag = 'head';
+              branchStaticTag = `head-${commitSha}`;
+              prevTag = await getPreviousTag('head-');
+            } else if (ref.startsWith('refs/heads/release/')) {
+              const version = ref.split('/')[2]; // Extract "vX.0"
+              branchTag = `${version}-head`;
+              branchStaticTag = `${version}-head-${commitSha}`;
+              prevTag = await getPreviousTag(`${version}-head-`);
+            } else {
+              throw new Error('Unsupported branch pattern. Expected "main" or "release/v[0-9]+.0".');
+            }
+
+            core.setOutput("branch_tag", branchTag);
+            core.setOutput("branch_static_tag", branchStaticTag);
+            core.setOutput("prev_tag", prevTag);
+    outputs:
+      branch_tag: ${{ steps.set-vars.outputs.branch_tag }}
+      branch_static_tag: ${{ steps.set-vars.outputs.branch_static_tag }}
+      prev_tag: ${{ steps.set-vars.outputs.prev_tag }}
+
+  publish-public:
+    runs-on: ubuntu-latest
+    needs:
+      - prebuild-env
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@44c2b7a8a4ea60a981eaca3cf939b5f4305c123b # v4.1.5
+
+      - name: Build and push all image variations
+        uses: rancher/ecm-distro-tools/actions/publish-image@master
+        with:
+          image: rancher-kuberlr-kubectl
+          tag: ${{ needs.prebuild-env.outputs.branch_static_tag }}
+          platforms: "linux/amd64,linux/arm64,linux/s390x"
+
+          public-registry: ${{ env.REGISTRY }}
+          public-repo: ${{ vars.REPO || github.repository_owner }}
+          public-username: ${{ vars.DOCKER_USERNAME }}
+          public-password: ${{ secrets.DOCKER_PASSWORD }}
+          push-to-prime: 'false'
+
+      - name: Re-tag the static head image using the rolling tag
+        env:
+          FULL_IMAGE_URL: ${{ env.REGISTRY }}/${{ vars.REPO || github.repository_owner }}/rancher-kuberlr-kubectl
+        run: |
+          docker pull ${FULL_IMAGE_PATH}:${{ needs.prebuild-env.outputs.branch_static_tag }}
+          docker tag ${FULL_IMAGE_PATH}:${{ needs.prebuild-env.outputs.branch_static_tag }} ${FULL_IMAGE_PATH}:${{ needs.prebuild-env.outputs.branch_tag }}
+          docker push ${FULL_IMAGE_PATH}:${{ needs.prebuild-env.outputs.branch_tag }}
