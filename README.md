@@ -11,10 +11,11 @@ This repo produces a Rancher specific version of kuberlr `mallardduck/rancher-ku
   - Each release pre-bundles all [kubectl](https://github.com/rancher/kubectl) versions supported by the Rancher version the release supports.
 
 ## Branches, Releases, and Rancher
-| branch       | Release | Rancher |
-|--------------|---------|---------|
-| release/v2.9 | v2.Y.Z  | 2.9.Z   |
-| release/v2.8 | v1.Y.Z  | 2.8.Z   |
+| branch               | Release       | Rancher |
+|----------------------|---------------|---------|
+| main (release/v2.10) | head (v3.Y.Z) | 2.10.Z  |
+| release/v2.9         | v2.Y.Z        | 2.9.Z   |
+| release/v2.8         | v1.Y.Z        | 2.8.Z   |
 
 ### Notes:
 - Each minor Rancher release will get a `rancher-kuberlr-kubectl` branch:
