@@ -1,9 +1,9 @@
-name: Image Release
+name: Stable Image Releases
 
 on:
   push:
     tags:
-      - 'v*'
+      - '*'
 
 env:
   IMAGE_REPO: "mallardduck/rancher-kuberlr-kubectl"
