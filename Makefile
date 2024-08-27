@@ -1,4 +1,4 @@
-# To avoid poluting the Makefile, versions and checksums for tooling and
+# To avoid polluting the Makefile, versions and checksums for tooling and
 # dependencies are defined at hack/make/deps.mk.
 include hack/make/deps.mk
 
