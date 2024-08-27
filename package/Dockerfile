@@ -1,5 +1,4 @@
 ARG BCI_VERSION=15.6
-FROM --platform=$TARGETPLATFORM mallardduck/rancher-kuberlr:v0.4.5 AS kuberlr
 FROM --platform=$BUILDPLATFORM registry.suse.com/bci/bci-base:${BCI_VERSION} AS build
 
 ARG TARGETPLATFORM
@@ -35,28 +34,9 @@ RUN set -fx; versions=($KUBECTL_VERSION_INFO); \
         echo "${KUBE_SUM} ${kubectl_target}" | sha256sum -c -; \
     done
 
-FROM --platform=$TARGETPLATFORM registry.suse.com/bci/bci-busybox:${BCI_VERSION} AS final
+FROM ghcr.io/flavio/kuberlr:v0.5.1
 
-COPY --chown=root --from=kuberlr /bin/kuberlr /tmp/kuberlr
-RUN cd /tmp && ln -s ./kuberlr ./kubectl
-
-RUN echo 'kuberlr:x:1000:1000:kuberlr,,,:/home/kuberlr:/bin/bash' > /etc/passwd && \
-    echo 'kuberlr:x:1000:' > /etc/group && \
-    mkdir /home/kuberlr && \
-    mkdir /home/kuberlr/.kube && \
-    mkdir /home/kuberlr/.kuberlr && \
-    touch /home/kuberlr/.kuberlr/kuberlr.conf && \
-    echo "AllowDownload = false" >> /home/kuberlr/.kuberlr/kuberlr.conf && \
-    echo 'SystemPath = "/usr/bin"' >> /home/kuberlr/.kuberlr/kuberlr.conf && \
-    echo "Timeout = 6" >> /home/kuberlr/.kuberlr/kuberlr.conf && \
-    chown -R 1000:1000 /home/kuberlr && \
-    chmod 700 /run
-
-FROM scratch
 COPY --from=build /tmp/kubectl* /usr/bin/
-COPY --from=final /tmp /bin
-COPY --from=final /etc /etc
-COPY --from=final /home /home
 
 USER kuberlr
 WORKDIR /home/kuberlr
