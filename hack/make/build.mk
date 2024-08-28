@@ -7,15 +7,7 @@ ifeq ($(VERSION),)
 		DIRTY = -dirty
 	endif
 
-	# Prioritise DRONE_TAG for backwards compatibility. However, the git tag
-	# command should be able to gather the current tag, except when the git
-	# clone operation was done with "--no-tags".
-	ifneq ($(DRONE_TAG),)
-		GIT_TAG = $(DRONE_TAG)
-	else
-		GIT_TAG = $(shell git tag -l --contains HEAD | head -n 1)
-	endif
-
+	GIT_TAG = $(shell git tag -l --contains HEAD | head -n 1)
 	COMMIT = $(shell git rev-parse --short HEAD)
 	VERSION = $(COMMIT)$(DIRTY)
 
@@ -28,16 +20,16 @@ ifeq ($(VERSION),)
 	endif
 endif
 
-RUNNER := docker
-IMAGE_BUILDER := $(RUNNER) buildx
-MACHINE := rancher
-
 ifeq ($(TAG),)
 	TAG = $(VERSION)
 	ifneq ($(DIRTY),)
 		TAG = dev
 	endif
 endif
+
+RUNNER := docker
+IMAGE_BUILDER := $(RUNNER) buildx
+MACHINE := rancher
 
 # Define the target platforms that can be used across the ecosystem.
 # Note that what would actually be used for a given project will be

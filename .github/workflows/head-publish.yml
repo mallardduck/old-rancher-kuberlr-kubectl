@@ -23,48 +23,7 @@ jobs:
     steps:
       - name: Set Branch Tag and Other Variables
         id: set-vars
-        uses: actions/github-script@v6
-        with:
-          script: |
-            const ref = process.env.GITHUB_REF;
-            const commitSha = process.env.GITHUB_SHA.substring(0, 7);
-
-            let branchTag;
-            let branchStaticTag;
-            let prev_tag = null;
-
-
-            async function getPreviousTag(tagPrefix) {
-              const { data: tags } = await github.rest.repos.listTags({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                per_page: 100
-              });
-
-              // Filter and sort tags by version or commit
-              const filteredTags = tags
-                .filter(tag => tag.name.startsWith(tagPrefix))
-                .sort((a, b) => new Date(b.commit.committer.date) - new Date(a.commit.committer.date));
-
-              return filteredTags.length > 0 ? filteredTags[0].name : null;
-            }
-
-            if (ref == 'refs/heads/main') {
-              branchTag = 'head';
-              branchStaticTag = `head-${commitSha}`;
-              prevTag = await getPreviousTag('head-');
-            } else if (ref.startsWith('refs/heads/release/')) {
-              const version = ref.split('/')[2]; // Extract "vX.0"
-              branchTag = `${version}-head`;
-              branchStaticTag = `${version}-head-${commitSha}`;
-              prevTag = await getPreviousTag(`${version}-head-`);
-            } else {
-              throw new Error('Unsupported branch pattern. Expected "main" or "release/v[0-9]+.0".');
-            }
-
-            core.setOutput("branch_tag", branchTag);
-            core.setOutput("branch_static_tag", branchStaticTag);
-            core.setOutput("prev_tag", prevTag);
+        run: ./.github/scripts/branch-tags.sh
     outputs:
       branch_tag: ${{ steps.set-vars.outputs.branch_tag }}
       branch_static_tag: ${{ steps.set-vars.outputs.branch_static_tag }}
@@ -97,6 +56,9 @@ jobs:
         env:
           FULL_IMAGE_URL: ${{ env.PUBLIC_REGISTRY }}/${{ vars.REPO || github.repository_owner }}/rancher-kuberlr-kubectl
         run: |
-          docker pull ${{ env.FULL_IMAGE_URL }}:${{ needs.prebuild-env.outputs.branch_static_tag }}
-          docker tag ${{ env.FULL_IMAGE_URL }}:${{ needs.prebuild-env.outputs.branch_static_tag }} ${{ env.FULL_IMAGE_URL }}:${{ needs.prebuild-env.outputs.branch_tag }}
+          MANIFEST_ARCHS=$(docker manifest inspect ${{ env.FULL_IMAGE_URL }}:${{ needs.prebuild-env.outputs.branch_static_tag }} | \
+                  jq -r '[.manifests[] |select(.platform.architecture != "unknown" and .platform.os != "unknown") | "\(.platform.os)/\(.platform.architecture)"] | join(",")'
+          )
+          docker pull --platform=$MANIFEST_ARCHS ${{ env.FULL_IMAGE_URL }}:${{ needs.prebuild-env.outputs.branch_static_tag }}
+          docker buildx imagetools create -t ${{ env.FULL_IMAGE_URL }}:${{ needs.prebuild-env.outputs.branch_static_tag }} ${{ env.FULL_IMAGE_URL }}:${{ needs.prebuild-env.outputs.branch_tag }}
           docker push ${{ env.FULL_IMAGE_URL }}:${{ needs.prebuild-env.outputs.branch_tag }}
