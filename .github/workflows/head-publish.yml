@@ -25,7 +25,7 @@ jobs:
         uses: actions/checkout@v4
       - name: Set Branch Tag and Other Variables
         id: set-vars
-        run: bash ./.github/scripts/branch-tags.sh
+        run: bash ./.github/scripts/branch-tags.sh >> $GITHUB_OUTPUT
     outputs:
       branch_tag: ${{ steps.set-vars.outputs.branch_tag }}
       branch_static_tag: ${{ steps.set-vars.outputs.branch_static_tag }}
