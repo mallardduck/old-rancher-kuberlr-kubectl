@@ -14,7 +14,7 @@ permissions:
   contents: write # Upload artefacts to release.
 
 env:
-  REGISTRY: docker.io
+  PUBLIC_REGISTRY: docker.io
 
 jobs:
   prebuild-env:
@@ -86,7 +86,7 @@ jobs:
           tag: ${{ needs.prebuild-env.outputs.branch_static_tag }}
           platforms: "linux/amd64,linux/arm64,linux/s390x"
 
-          public-registry: ${{ env.REGISTRY }}
+          public-registry: ${{ env.PUBLIC_REGISTRY }}
           public-repo: ${{ vars.REPO || github.repository_owner }}
           public-username: ${{ vars.DOCKER_USERNAME }}
           public-password: ${{ secrets.DOCKER_PASSWORD }}
@@ -95,8 +95,8 @@ jobs:
 
       - name: Re-tag the static head image using the rolling tag
         env:
-          FULL_IMAGE_URL: ${{ env.REGISTRY }}/${{ vars.REPO || github.repository_owner }}/rancher-kuberlr-kubectl
+          FULL_IMAGE_URL: ${{ env.PUBLIC_REGISTRY }}/${{ vars.REPO || github.repository_owner }}/rancher-kuberlr-kubectl
         run: |
-          docker pull ${FULL_IMAGE_PATH}:${{ needs.prebuild-env.outputs.branch_static_tag }}
-          docker tag ${FULL_IMAGE_PATH}:${{ needs.prebuild-env.outputs.branch_static_tag }} ${FULL_IMAGE_PATH}:${{ needs.prebuild-env.outputs.branch_tag }}
-          docker push ${FULL_IMAGE_PATH}:${{ needs.prebuild-env.outputs.branch_tag }}
+          docker pull ${{ env.FULL_IMAGE_URL }}:${{ needs.prebuild-env.outputs.branch_static_tag }}
+          docker tag ${{ env.FULL_IMAGE_URL }}:${{ needs.prebuild-env.outputs.branch_static_tag }} ${FULL_IMAGE_PATH}:${{ needs.prebuild-env.outputs.branch_tag }}
+          docker push ${{ env.FULL_IMAGE_URL }}:${{ needs.prebuild-env.outputs.branch_tag }}
