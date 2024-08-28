@@ -13,6 +13,9 @@ concurrency:
 permissions:
   contents: write # Upload artefacts to release.
 
+env:
+  REGISTRY: docker.io
+
 jobs:
   prebuild-env:
     name: Prebuild needed Env vars
@@ -92,7 +95,7 @@ jobs:
 
       - name: Re-tag the static head image using the rolling tag
         env:
-          FULL_IMAGE_URL: docker.io/${{ vars.REPO || github.repository_owner }}/rancher-kuberlr-kubectl
+          FULL_IMAGE_URL: ${{ env.REGISTRY }}/${{ vars.REPO || github.repository_owner }}/rancher-kuberlr-kubectl
         run: |
           docker pull ${FULL_IMAGE_PATH}:${{ needs.prebuild-env.outputs.branch_static_tag }}
           docker tag ${FULL_IMAGE_PATH}:${{ needs.prebuild-env.outputs.branch_static_tag }} ${FULL_IMAGE_PATH}:${{ needs.prebuild-env.outputs.branch_tag }}
