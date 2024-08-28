@@ -88,8 +88,6 @@ jobs:
           public-password: ${{ secrets.DOCKER_PASSWORD }}
 
           push-to-prime: false
-          prime-username: ''
-          prime-password: ''
 
       - name: Re-tag the static head image using the rolling tag
         env:
