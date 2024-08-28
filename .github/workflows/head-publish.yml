@@ -21,6 +21,8 @@ jobs:
     name: Prebuild needed Env vars
     runs-on: ubuntu-latest
     steps:
+      - name: Check out the repository to the runner
+        uses: actions/checkout@v4
       - name: Set Branch Tag and Other Variables
         id: set-vars
         run: ./.github/scripts/branch-tags.sh
