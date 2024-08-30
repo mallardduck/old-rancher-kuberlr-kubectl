@@ -9,8 +9,9 @@ include hack/make/build.mk
 TARGET_PLATFORMS ?= linux/amd64,linux/arm64,linux/s390x
 
 REPO ?= rancher
-IMAGE_NAME = $(REPO)/kuberlr-kubectl
-IMAGE = $(IMAGE_NAME):$(TAG)
+IMAGE ?= kuberlr-kubectl
+IMAGE_NAME = $(REPO)/$(IMAGE)
+FULL_IMAGE_TAG = $(IMAGE_NAME):$(TAG)
 BUILD_ACTION = --load
 
 .DEFAULT_GOAL := ci
@@ -22,14 +23,14 @@ clean: ## clean up project.
 build-image: buildx-machine ## build (and load) the container image targeting the current platform.
 	$(IMAGE_BUILDER) build -f package/Dockerfile \
 		--builder $(MACHINE) $(IMAGE_ARGS) \
-		--build-arg VERSION=$(VERSION) -t "$(IMAGE)" $(BUILD_ACTION) .
-	@echo "Built $(IMAGE)"
+		--build-arg VERSION=$(VERSION) -t "$(FULL_IMAGE_TAG)" $(BUILD_ACTION) .
+	@echo "Built $(FULL_IMAGE_TAG)"
 
 push-image: buildx-machine ## build the container image targeting all platforms defined by TARGET_PLATFORMS and push to a registry.
 	$(IMAGE_BUILDER) build -f package/Dockerfile \
 		--builder $(MACHINE) $(IMAGE_ARGS) $(IID_FILE_FLAG) $(BUILDX_ARGS) \
-		--build-arg VERSION=$(VERSION) --platform=$(TARGET_PLATFORMS) -t "$(IMAGE)" --push .
-	@echo "Pushed $(IMAGE)"
+		--build-arg VERSION=$(VERSION) --platform=$(TARGET_PLATFORMS) -t "$(FULL_IMAGE_TAG)" --push .
+	@echo "Pushed $(FULL_IMAGE_TAG)"
 
 validate: validate-dirty ## Run validation checks.
 
