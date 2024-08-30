@@ -1,14 +1,14 @@
-# rancher-kuberlr-kubectl
+# rancher/kuberlr-kubectl
 A simple way to invoke the correct [kubectl](https://github.com/rancher/kubectl) version on a Rancher managed cluster using [kuberlr](https://github.com/flavio/kuberlr).
 
-Images found at: https://hub.docker.com/r/mallardduck/rancher-kuberlr-kubectl
+Images found at: https://hub.docker.com/r/rancher/kuberlr-kubectl
 
 ## Details
-This repo produces a Rancher specific version of kuberlr `mallardduck/rancher-kuberlr:{version}`.
+This repo produces a Rancher specific version of the `flavio/kuberlr` image.
 
-  - This container is analogous to the current `rancher/kubectl` container, but based on [rancher-kuberlr](https://github.com/mallardduck/rancher-kuberlr)
-  - Unlike `rancher/kubectl` this image targets specific Rancher minor release.
-  - Each release pre-bundles all [kubectl](https://github.com/rancher/kubectl) versions supported by the Rancher version the release supports.
+  - This container is analogous to the current `rancher/kubectl` container, but based on [kuberlr](https://github.com/flavio/kuberlr)
+  - Unlike `rancher/kubectl`, this image targets specific Rancher minor release branches.
+  - Each release pre-bundles all necessary [kubectl](https://github.com/rancher/kubectl) versions supported by the Rancher version the release supports.
 
 ## Branches, Releases, and Rancher
 | branch               | Release       | Rancher |
@@ -23,28 +23,28 @@ This repo produces a Rancher specific version of kuberlr `mallardduck/rancher-ku
     - a `release/v2.9` will be created with not changes needed;
     - `release/v2.8` will be created and PR'd to match kubectl versions;
     - `main` can then be PR'd to use 2.10 target kubectls.
-- Each minor Rancher release will get a `rancher-kuberlr-kubectl` branch:
+- Each minor Rancher release will get a `rancher/kuberlr-kubectl` branch:
   - Each branch will get an image tag major to match it.
   - This gives us full "Y" and "Z" control on versioning the component to target Rancher minors.
   - E.x. Rancher 2.8.x releases will get varying versions of 1.Y.Z
 
 ### Compatability
 
-Each "kuberlr base image" will be essentially universially compatible like kuberlr is.
-However they were match each `kuberlr` release and subsequently `rancher-kuberlr` will be based on those.
+The base `flavio/kuberlr` image comes from the upstream repo and is essentially universally compatible like `kuberlr`.
+However, for it to work it relies on an internet connection to fetch kubectl binaries on the fly.
 
-So when a new `kuberlr` releases our automation will add the tag to the versions file via PR.
-Then upon merge another workflow will build and release new base images tagged matching that new version.
-After which, the `rancher-kuberlr` images will need a PR to update those to use the new `kuberlr`.
-And once ready to release new RCs can be created that will ship the new kuberlr.
+In contrast, our `rancher/kuberlr-kubectl` bundles the necessary `kubectl` binaries into each image.
+In this way the image is ready to work on any supported k8s versions for that Rancher release in an air-gap out the box.
+Given that k8s provides a slight version drift, as the Rancher minor lifecycle progresses we reduce inclusion of older `kubectl` versions.
+
 
 ```mermaid
 
 gantt
-  title `rancher/rancher` and `rancher-kuberlr-kubectl`
+  title `rancher/rancher` and `rancher/kuberlr-kubectl`
   todayMarker off
   dateFormat X
-  axisFormat %S
+  axisFormat 1.%S
   tickInterval 1second
   section Rancher
     2.8.X           :25,28
@@ -52,7 +52,7 @@ gantt
   section kuberlr-kubectl image
     1.Y.Z (for Rancher 2.8)   :25,28
     2.Y.Z (for Rancher 2.9)   :27,30
-  section Kubectl
+  section Kubectl Drift
     1.25              :24,26
     1.26              :25,27
     1.27              :26,28
@@ -61,20 +61,4 @@ gantt
     1.30              :29,31
 ```
 
-Note: Over-time, as new `kuberlr` binaries are released we can introduce a new base image based on that.  
-Then we can still subsequently bump the Y or Z of that "rancher kuberlr" release to update all supported Rancher releases.
-
-# Upon move to `rancher/` do
-1. Request EIO create:
-   1. GitHub `rancher/kuberlr-kubectl` repo,
-   2. Docker Hub repo,
-   3. Secrets for the GitHub to push to dockerhub
-2. Find and replace `mallardduck/rancher-kuberlr-kubectl` to `rancher/kuberlr-kubectl`,
-3. Find and replace `mallardduck/rancher-kuberlr` to `rancher/kuberlr`,
-4. Find and replace `rancher-kuberlr-kubectl` to `rancher/kuberlr-kubectl`,
-5. Find and replace `rancher-kuberlr` to `rancher/kuberlr`,
-6. Update workflows to use EIO provided secrets
-7. Add renovate (maybe it'll help catch docker tags used to build)
-8. Review CIs and ensure all images and releases are published,
-9. Send PRs (or create issues) to `rancher/charts` to update any usage of `rancher/kubectl` and `rancher/shell` to use correct `rancher/kuberlr-kubectl` image,
-10. [PR Shell](https://github.com/rancher/shell/pull/249) to use the correct `rancher/kuberlr-kubectl` as the base for it.
+> Note: Over-time, as new `kuberlr` binaries are released we can still bump the Y or Z of each `rancher/kuberlr-kubectl` release to update all supported Rancher releases.
