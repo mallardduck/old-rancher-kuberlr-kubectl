@@ -42,21 +42,20 @@ jobs:
       - name: Build and push all image variations
         uses: rancher/ecm-distro-tools/actions/publish-image@master
         with:
-          image: rancher/kuberlr-kubectl
-          make-target: 'image-push'
+          image: kuberlr-kubectl
           tag: ${{ needs.prebuild-env.outputs.branch_static_tag }}
           platforms: "linux/amd64,linux/arm64,linux/s390x"
 
           public-registry: ${{ env.PUBLIC_REGISTRY }}
           public-repo: ${{ vars.REPO || github.repository_owner }}
-          public-username: ${{ vars.DOCKER_USERNAME }}
+          public-username: ${{ vars.DOCKER_USERNAME || github.repository_owner }}
           public-password: ${{ secrets.DOCKER_PASSWORD }}
 
           push-to-prime: false
 
       - name: Re-tag the static head image using the rolling tag
         env:
-          FULL_IMAGE_URL: ${{ env.PUBLIC_REGISTRY }}/${{ vars.REPO || github.repository_owner }}/rancher/kuberlr-kubectl
+          FULL_IMAGE_URL: ${{ env.PUBLIC_REGISTRY }}/${{ vars.REPO || github.repository_owner }}/kuberlr-kubectl
         run: |
           VERSION="1.2.0"
           curl -LO "https://github.com/oras-project/oras/releases/download/v${VERSION}/oras_${VERSION}_linux_amd64.tar.gz"
