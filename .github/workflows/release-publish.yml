@@ -6,7 +6,7 @@ on:
       - '*'
 
 env:
-  IMAGE_REPO: "mallardduck/rancher-kuberlr-kubectl"
+  IMAGE_REPO: "rancher/kuberlr-kubectl"
 
 # GitHub settings / example values:
 #
